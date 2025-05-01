@@ -1,7 +1,7 @@
 services:
   - type: cron
     name: arbitrage-detector
-    schedule: "*/5 * * * *"  # Every 5 minutes
+    schedule: "*/15 * * * *"  # Every 15 minutes
     runtime: python
     plan: free
     buildCommand: ""
@@ -11,4 +11,3 @@ services:
         sync: false
       - key: DISCORD_WEBHOOK_URL
         sync: false
-
