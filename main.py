@@ -14,8 +14,9 @@ def main():
 
     total_arbs = 0
     for game in games:
-        teams = game.get("teams", ["Unknown", "Unknown"])
-        print(f"⚔️ Checking: {teams[0]} vs {teams[1]}")
+        team1 = game.get("home_team", "Home")
+        team2 = game.get("away_team", "Away")
+        print(f"⚔️ Checking: {team1} vs {team2}")
 
         arbs = detect_arbitrage(game)
         if arbs:
@@ -29,7 +30,6 @@ def main():
                 except Exception as e:
                     print(f"[ERROR] Failed to send Discord message: {e}")
         else:
-            # Optional: show best inverse sum (i.e., how close it was)
             best_margin = get_best_margin(game)
             if best_margin is not None:
                 print(f"📉 Closest profit margin found: {best_margin:.2f}%")
@@ -48,6 +48,8 @@ def get_best_margin(game):
                     if market1["key"] != market2["key"]:
                         continue
                     try:
+                        if len(market1["outcomes"]) != 2 or len(market2["outcomes"]) != 2:
+                            continue
                         o1 = market1["outcomes"][0]["price"]
                         o2 = market2["outcomes"][1]["price"]
                         inv_sum = (1 / o1) + (1 / o2)
