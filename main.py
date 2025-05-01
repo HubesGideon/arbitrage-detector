@@ -39,6 +39,8 @@ def main():
 
 def get_best_margin(game):
     best = None
+    debug_game = f"{game.get('home_team', 'Home')} vs {game.get('away_team', 'Away')}"
+
     for book1 in game.get("bookmakers", []):
         for market1 in book1.get("markets", []):
             for book2 in game.get("bookmakers", []):
@@ -49,6 +51,7 @@ def get_best_margin(game):
                         continue
                     try:
                         if len(market1["outcomes"]) != 2 or len(market2["outcomes"]) != 2:
+                            print(f"⚠️ Skipping market (not 2 outcomes) for {debug_game} - {market1['key']}")
                             continue
                         o1 = market1["outcomes"][0]["price"]
                         o2 = market2["outcomes"][1]["price"]
@@ -56,9 +59,10 @@ def get_best_margin(game):
                         margin = (1 - inv_sum) * 100
                         if best is None or margin > best:
                             best = margin
-                    except:
-                        continue
+                    except Exception as e:
+                        print(f"[ERROR] while evaluating {debug_game}: {e}")
     return best
+
 
 if __name__ == "__main__":
     main()
