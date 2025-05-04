@@ -1,59 +1,33 @@
-import requests
-import os
-
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-
-def decimal_to_american(odds):
-    if odds >= 2.0:
-        return f"+{int((odds - 1) * 100)}"
-    else:
-        return f"-{int(100 / (odds - 1))}"
-
-def color_by_margin(margin):
-    if margin >= 10:
-        return "🟢"
-    elif margin >= 5:
-        return "🟡"
-    else:
-        return "🔴"
-
-def format_line_label(outcome, market_type):
-    name = outcome.get("name", "")
-    line = outcome.get("point")
-    if market_type == "totals" and line is not None:
-        return f"{name} {line:.1f}"  # e.g., Over 2.5
-    elif market_type == "spreads" and line is not None:
-        sign = "+" if line > 0 else ""
-        return f"{name} {sign}{line:.1f}"  # e.g., Team +3.5
-    return name
-
 def format_message(arb):
+    from utils import color_by_margin, american_odds
+
     team1, team2 = arb["teams"]
     book1, book2 = arb["bookmakers"]
     o1, o2 = arb["odds"]
-    margin = arb["profit_margin"]
     market = arb["market"]
-    outcome1 = arb.get("outcome1", {})
-    outcome2 = arb.get("outcome2", {})
+    pm = arb["profit_margin"]
+    outcome1 = arb["outcome1"]
+    outcome2 = arb["outcome2"]
+    point1 = outcome1.get("point")
+    point2 = outcome2.get("point")
 
-    if market in ["spreads", "totals"]:
-        label1 = format_line_label(outcome1, market)
-        label2 = format_line_label(outcome2, market)
-        odds1 = decimal_to_american(o1)
-        odds2 = decimal_to_american(o2)
-        odds_text = f"{book1} {label1}: {odds1} | {book2} {label2}: {odds2}"
+    status_tag = "🟢 [LIVE]" if arb.get("in_play") else "⚪ [PREGAME]"
+    color = color_by_margin(pm)
+
+    if market == "spreads" and point1 is not None and point2 is not None:
+        label1 = f"{book1} {point1:+}: {american_odds(o1)}"
+        label2 = f"{book2} {point2:+}: {american_odds(o2)}"
+    elif market == "totals" and point1 is not None:
+        label1 = f"{book1} {outcome1['name']} {point1}: {american_odds(o1)}"
+        label2 = f"{book2} {outcome2['name']} {point2}: {american_odds(o2)}"
     else:
-        odds_text = f"{book1}: {decimal_to_american(o1)} | {book2}: {decimal_to_american(o2)}"
+        label1 = f"{book1}: {american_odds(o1)}"
+        label2 = f"{book2}: {american_odds(o2)}"
 
-    return (
-        f"{color_by_margin(margin)} Arbitrage Opportunity ({market})\n"
+    message = (
+        f"{status_tag} **{color} Arbitrage Opportunity ({market})**\n"
         f"{team1} vs {team2}\n"
-        f"{odds_text}\n"
-        f"Profit Margin: {margin:.2f}%"
+        f"{label1}  |  {label2}\n"
+        f"Profit Margin: **{pm:.2f}%**"
     )
-
-def notify_discord(message):
-    try:
-        requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
-    except Exception as e:
-        print(f"[ERROR] Failed to send Discord message: {e}")
+    return message
