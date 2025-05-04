@@ -40,7 +40,7 @@ def detect_arbitrage(game):
                             if abs(point1) != abs(point2) or (point1 > 0) == (point2 > 0):
                                 continue
 
-                        # Skip misaligned totals
+                        # Skip mismatched totals
                         if market_type == "totals":
                             if point1 is None or point2 is None:
                                 continue
@@ -57,16 +57,8 @@ def detect_arbitrage(game):
                             elif market_type == "totals":
                                 key = (market_type, outcome1.get("name", ""), point1, book1["title"])
                             elif market_type == "h2h":
-                                # Dynamically pick the underdog side
-                                if o1 > o2:
-                                    underdog_name = outcome1.get("name")
-                                    underdog_odds = o1
-                                    underdog_book = book1["title"]
-                                else:
-                                    underdog_name = outcome2.get("name")
-                                    underdog_odds = o2
-                                    underdog_book = book2["title"]
-                                key = (market_type, underdog_name, underdog_odds, underdog_book)
+                                underdog_team = outcome1["name"] if o1 > o2 else outcome2["name"]
+                                key = ("h2h", underdog_team)
                             else:
                                 key = (market_type, book1["title"])
 
