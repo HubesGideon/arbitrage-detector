@@ -13,8 +13,8 @@ def log_arb_metadata(arb):
     o1 = arb["outcome1"]
     o2 = arb["outcome2"]
 
-    last_update_1 = o1.get("last_update", "N/A")
-    last_update_2 = o2.get("last_update", "N/A")
+    last_update_1 = arb.get("book1_last_update", "N/A")
+    last_update_2 = arb.get("book2_last_update", "N/A")
 
     print(f"🕒 Game Time: {game_time}")
     print(f"📡 Live Game: {'Yes' if is_live else 'No'}")
@@ -46,7 +46,7 @@ def main():
             log_arb_metadata(arb)
 
             try:
-                message = format_message(arb)  # from notifier.py
+                message = format_message(arb)
                 notify_discord(message)
                 print("✅ Sent to Discord")
             except Exception as e:
