@@ -51,14 +51,22 @@ def detect_arbitrage(game):
                         profit_margin = (1 - inv_sum) * 100
 
                         if profit_margin >= 2:
-                            # Deduplication key logic
+                            # Deduplication key
                             if market_type == "spreads":
                                 key = (market_type, outcome1.get("name", ""), point1, book1["title"])
                             elif market_type == "totals":
                                 key = (market_type, outcome1.get("name", ""), point1, book1["title"])
                             elif market_type == "h2h":
-                                # Use the underdog (book2) side as key
-                                key = (market_type, outcome2.get("name"), o2, book2["title"])
+                                # Dynamically pick the underdog side
+                                if o1 > o2:
+                                    underdog_name = outcome1.get("name")
+                                    underdog_odds = o1
+                                    underdog_book = book1["title"]
+                                else:
+                                    underdog_name = outcome2.get("name")
+                                    underdog_odds = o2
+                                    underdog_book = book2["title"]
+                                key = (market_type, underdog_name, underdog_odds, underdog_book)
                             else:
                                 key = (market_type, book1["title"])
 
