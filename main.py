@@ -2,9 +2,17 @@ import time
 from odds_api import fetch_odds
 from arbitrage import detect_arbitrage
 from notifier import notify_discord, format_message
-from datetime import datetime
+from datetime import datetime, timezone
 
-LIVE_GAME_MARGIN_THRESHOLD = 10  # percent
+STALE_ODDS_THRESHOLD = 30  # seconds
+
+def is_stale(timestamp_str):
+    try:
+        t = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+        age = (datetime.now(timezone.utc) - t).total_seconds()
+        return age > STALE_ODDS_THRESHOLD
+    except:
+        return True
 
 def log_arb_metadata(arb):
     game_time = arb.get("start_time", "N/A")
@@ -37,8 +45,9 @@ def main():
             is_live = arb.get("in_play", False)
             margin = arb["profit_margin"]
 
-            # Filter: only allow live games if margin ≥ threshold
-            if is_live and margin < LIVE_GAME_MARGIN_THRESHOLD:
+            # Skip if stale odds
+            if is_stale(arb["book1_last_update"]) or is_stale(arb["book2_last_update"]):
+                print("⏳ Skipping stale arbitrage (odds older than 30s)")
                 continue
 
             status = "LIVE" if is_live else "PREGAME"
