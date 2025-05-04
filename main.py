@@ -45,10 +45,11 @@ def main():
             is_live = arb.get("in_play", False)
             margin = arb["profit_margin"]
 
-            # Skip if stale odds
-            if is_stale(arb["book1_last_update"]) or is_stale(arb["book2_last_update"]):
-                print("⏳ Skipping stale arbitrage (odds older than 30s)")
-                continue
+            # ✅ Only filter stale odds for live games
+            if is_live:
+                if is_stale(arb["book1_last_update"]) or is_stale(arb["book2_last_update"]):
+                    print("⏳ Skipping stale LIVE arbitrage (odds older than 60s)")
+                    continue
 
             status = "LIVE" if is_live else "PREGAME"
             print(f"⚔️ Checking ({status}): {arb['teams'][0]} vs {arb['teams'][1]}")
