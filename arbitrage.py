@@ -17,11 +17,14 @@ def detect_arbitrage(game):
                     if market1["key"] != market2["key"]:
                         continue
                     try:
-                        if len(market1["outcomes"]) < 2 or len(market2["outcomes"]) < 2:
+                        outcomes1 = {o.get("name"): o for o in market1.get("outcomes", [])}
+                        outcomes2 = {o.get("name"): o for o in market2.get("outcomes", [])}
+
+                        if home_team not in outcomes1 or away_team not in outcomes2:
                             continue
 
-                        outcome1 = market1["outcomes"][0]
-                        outcome2 = market2["outcomes"][1]
+                        outcome1 = outcomes1[home_team]
+                        outcome2 = outcomes2[away_team]
 
                         o1 = outcome1["price"]
                         o2 = outcome2["price"]
@@ -37,7 +40,7 @@ def detect_arbitrage(game):
                             if abs(point1) != abs(point2) or (point1 > 0) == (point2 > 0):
                                 continue
 
-                        # Skip totals with mismatched lines
+                        # Skip misaligned totals
                         if market_type == "totals":
                             if point1 is None or point2 is None:
                                 continue
@@ -48,7 +51,6 @@ def detect_arbitrage(game):
                         profit_margin = (1 - inv_sum) * 100
 
                         if profit_margin >= 2:
-                            # Define deduplication key
                             if market_type == "spreads":
                                 key = (market_type, outcome1.get("name", ""), point1, book1["title"])
                             elif market_type == "totals":
@@ -72,5 +74,4 @@ def detect_arbitrage(game):
                     except:
                         continue
 
-    arbs.extend(best_by_side.values())
-    return arbs
+    return list(best_by_side.values())
