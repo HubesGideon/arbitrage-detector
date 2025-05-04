@@ -1,6 +1,7 @@
-def detect_arbitrage(game):
-    from collections import defaultdict
+from datetime import datetime, timezone
+from collections import defaultdict
 
+def detect_arbitrage(game):
     arbs = []
     home_team = game.get("home_team", "Home")
     away_team = game.get("away_team", "Away")
@@ -51,7 +52,6 @@ def detect_arbitrage(game):
                         profit_margin = (1 - inv_sum) * 100
 
                         if profit_margin >= 2:
-                            # Deduplication keys
                             if market_type == "spreads":
                                 key = ("spreads", outcome1.get("name", ""), point1)
                             elif market_type == "totals":
@@ -61,6 +61,15 @@ def detect_arbitrage(game):
                                 key = ("h2h", underdog_team)
                             else:
                                 key = (market_type, book1["title"])
+
+                            start_time = game.get("commence_time")
+                            is_live = False
+                            try:
+                                start_dt = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
+                                if datetime.now(timezone.utc) >= start_dt:
+                                    is_live = True
+                            except:
+                                pass
 
                             existing = best_by_side.get(key)
                             if not existing or profit_margin > existing["profit_margin"]:
@@ -72,8 +81,8 @@ def detect_arbitrage(game):
                                     "profit_margin": profit_margin,
                                     "outcome1": outcome1,
                                     "outcome2": outcome2,
-                                    "start_time": game.get("commence_time"),
-                                    "in_play": game.get("in_progress", False),
+                                    "start_time": start_time,
+                                    "in_play": is_live,
                                     "book1_last_update": book1.get("last_update", "N/A"),
                                     "book2_last_update": book2.get("last_update", "N/A")
                                 }
