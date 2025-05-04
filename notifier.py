@@ -11,34 +11,21 @@ def decimal_to_american(odds):
 
 def color_by_margin(margin):
     if margin >= 10:
-        return "🟢"  # Green
+        return "🟢"
     elif margin >= 5:
-        return "🟡"  # Yellow
+        return "🟡"
     else:
-        return "🔴"  # Red
+        return "🔴"
 
-def format_outcome(bookmaker_data, outcome_index, market_type):
-    try:
-        outcome = bookmaker_data["markets"][0]["outcomes"][outcome_index]
-        name = outcome.get("name", "")
-        line = outcome.get("point")
-        price = outcome["price"]
-        american_odds = decimal_to_american(price)
-
-        label = name
-        if market_type == "totals":
-            # name is typically 'Over' or 'Under'
-            if line is not None:
-                label = f"{name} {line:.1f}"
-        elif market_type == "spreads":
-            # name is team name, line is point spread
-            if line is not None:
-                sign = "+" if line > 0 else ""
-                label = f"{name} {sign}{line:.1f}"
-
-        return f"{bookmaker_data['title']} {label.strip()}: {american_odds}"
-    except:
-        return f"{bookmaker_data['title']}: ERR"
+def format_line_label(outcome, market_type):
+    name = outcome.get("name", "")
+    line = outcome.get("point")
+    if market_type == "totals" and line is not None:
+        return f"{name} {line:.1f}"  # e.g., Over 2.5
+    elif market_type == "spreads" and line is not None:
+        sign = "+" if line > 0 else ""
+        return f"{name} {sign}{line:.1f}"  # e.g., Team +3.5
+    return name
 
 def format_message(arb):
     team1, team2 = arb["teams"]
@@ -46,11 +33,15 @@ def format_message(arb):
     o1, o2 = arb["odds"]
     margin = arb["profit_margin"]
     market = arb["market"]
+    outcome1 = arb.get("outcome1", {})
+    outcome2 = arb.get("outcome2", {})
 
     if market in ["spreads", "totals"]:
-        line1 = format_outcome({"title": book1, "markets": [{"outcomes": [{"price": o1}]}]}, 0, market)
-        line2 = format_outcome({"title": book2, "markets": [{"outcomes": [{"price": o2}]}]}, 1, market)
-        odds_text = f"{line1} | {line2}"
+        label1 = format_line_label(outcome1, market)
+        label2 = format_line_label(outcome2, market)
+        odds1 = decimal_to_american(o1)
+        odds2 = decimal_to_american(o2)
+        odds_text = f"{book1} {label1}: {odds1} | {book2} {label2}: {odds2}"
     else:
         odds_text = f"{book1}: {decimal_to_american(o1)} | {book2}: {decimal_to_american(o2)}"
 
@@ -62,8 +53,7 @@ def format_message(arb):
     )
 
 def notify_discord(message):
-    payload = {"content": message}
     try:
-        requests.post(DISCORD_WEBHOOK_URL, json=payload)
+        requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
     except Exception as e:
         print(f"[ERROR] Failed to send Discord message: {e}")
