@@ -1,6 +1,20 @@
-def format_message(arb):
-    from utils import color_by_margin, american_odds
+import requests
+from utils import color_by_margin, american_odds
 
+DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1367538763194171472/2fhnOWu65y1r9xnzJN_lqcSjUKj2we9J1ZVHZOUesBYt4tlOlDYT6f6HE9lmFJYGSskT"  # Replace with your actual webhook URL
+
+def notify_discord(message):
+    payload = {
+        "content": message
+    }
+    headers = {
+        "Content-Type": "application/json"
+    }
+    response = requests.post(DISCORD_WEBHOOK_URL, json=payload, headers=headers)
+    if response.status_code != 204:
+        raise Exception(f"Discord returned status {response.status_code}: {response.text}")
+
+def format_message(arb):
     team1, team2 = arb["teams"]
     book1, book2 = arb["bookmakers"]
     o1, o2 = arb["odds"]
@@ -31,3 +45,4 @@ def format_message(arb):
         f"Profit Margin: **{pm:.2f}%**"
     )
     return message
+
