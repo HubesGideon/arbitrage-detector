@@ -1,7 +1,7 @@
 import time
 from odds_api import fetch_odds
 from arbitrage import detect_arbitrage
-from notifier import notify_discord
+from notifier import notify_discord, format_message
 from datetime import datetime
 
 LIVE_GAME_MARGIN_THRESHOLD = 10  # percent
