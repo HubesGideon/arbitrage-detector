@@ -1,68 +1,63 @@
+import time
 from odds_api import fetch_odds
 from arbitrage import detect_arbitrage
-from notifier import notify_discord, format_message
+from notifier import notify_discord
+from datetime import datetime
+
+LIVE_GAME_MARGIN_THRESHOLD = 10  # percent
+
+def log_arb_metadata(arb):
+    game_time = arb.get("start_time", "N/A")
+    is_live = arb.get("in_play", False)
+    book1, book2 = arb["bookmakers"]
+    o1 = arb["outcome1"]
+    o2 = arb["outcome2"]
+
+    last_update_1 = o1.get("last_update", "N/A")
+    last_update_2 = o2.get("last_update", "N/A")
+
+    print(f"🕒 Game Time: {game_time}")
+    print(f"📡 Live Game: {'Yes' if is_live else 'No'}")
+    print(f"📊 Bookmakers: {book1} vs {book2}")
+    print(f"📆 Last Update (Book 1): {last_update_1}")
+    print(f"📆 Last Update (Book 2): {last_update_2}")
+    print(f"💰 Odds: {book1}: {arb['odds'][0]} | {book2}: {arb['odds'][1]}")
+    print(f"📈 Profit Margin: {arb['profit_margin']:.2f}%")
+    print("-" * 60)
 
 def main():
     print("🟡 Starting arbitrage scan...")
-
-    try:
-        games = fetch_odds()
-        print(f"📦 Retrieved {len(games)} games")
-    except Exception as e:
-        print(f"[ERROR] Failed to fetch odds: {e}")
-        return
+    games = fetch_odds()
+    print(f"📦 Retrieved {len(games)} games")
 
     total_arbs = 0
     for game in games:
-        team1 = game.get("home_team", "Home")
-        team2 = game.get("away_team", "Away")
-        print(f"⚔️ Checking: {team1} vs {team2}")
-
         arbs = detect_arbitrage(game)
-        if arbs:
-            print(f"🔍 Found {len(arbs)} arbitrage opportunity(ies) for this game")
-            for arb in arbs:
-                total_arbs += 1
-                print(f"➡️  {arb['market']} | {arb['bookmakers'][0]} vs {arb['bookmakers'][1]} | {arb['profit_margin']:.2f}%")
-                try:
-                    notify_discord(format_message(arb))
-                    print("✅ Sent to Discord")
-                except Exception as e:
-                    print(f"[ERROR] Failed to send Discord message: {e}")
-        else:
-            best_margin = get_best_margin(game)
-            if best_margin is not None:
-                print(f"📉 Closest profit margin found: {best_margin:.2f}%")
+        for arb in arbs:
+            is_live = arb.get("in_play", False)
+            margin = arb["profit_margin"]
+
+            # Filter: only allow live games if margin ≥ threshold
+            if is_live and margin < LIVE_GAME_MARGIN_THRESHOLD:
+                continue
+
+            status = "LIVE" if is_live else "PREGAME"
+            print(f"⚔️ Checking ({status}): {arb['teams'][0]} vs {arb['teams'][1]}")
+            log_arb_metadata(arb)
+
+            try:
+                message = format_message(arb)  # from notifier.py
+                notify_discord(message)
+                print("✅ Sent to Discord")
+            except Exception as e:
+                print(f"[ERROR] Failed to send Discord message: {e}")
+
+            total_arbs += 1
 
     if total_arbs == 0:
         print("🚫 No arbitrage opportunities found this run.")
-
-def get_best_margin(game):
-    best = None
-    debug_game = f"{game.get('home_team', 'Home')} vs {game.get('away_team', 'Away')}"
-
-    for book1 in game.get("bookmakers", []):
-        for market1 in book1.get("markets", []):
-            for book2 in game.get("bookmakers", []):
-                if book1["title"] == book2["title"]:
-                    continue
-                for market2 in book2.get("markets", []):
-                    if market1["key"] != market2["key"]:
-                        continue
-                    try:
-                        if len(market1["outcomes"]) != 2 or len(market2["outcomes"]) != 2:
-                            print(f"⚠️ Skipping market (not 2 outcomes) for {debug_game} - {market1['key']}")
-                            continue
-                        o1 = market1["outcomes"][0]["price"]
-                        o2 = market2["outcomes"][1]["price"]
-                        inv_sum = (1 / o1) + (1 / o2)
-                        margin = (1 - inv_sum) * 100
-                        if best is None or margin > best:
-                            best = margin
-                    except Exception as e:
-                        print(f"[ERROR] while evaluating {debug_game}: {e}")
-    return best
-
+    else:
+        print(f"✅ Total arbitrage alerts sent: {total_arbs}")
 
 if __name__ == "__main__":
     main()
