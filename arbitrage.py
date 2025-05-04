@@ -13,7 +13,6 @@ def detect_arbitrage(game):
                     if market1["key"] != market2["key"]:
                         continue
                     try:
-                        # Ensure both markets have at least 2 outcomes
                         if len(market1["outcomes"]) < 2 or len(market2["outcomes"]) < 2:
                             continue
 
@@ -23,13 +22,32 @@ def detect_arbitrage(game):
                         o1 = outcome1["price"]
                         o2 = outcome2["price"]
 
+                        # Filter invalid spreads/totals
+                        market_type = market1["key"]
+                        point1 = outcome1.get("point")
+                        point2 = outcome2.get("point")
+
+                        if market_type == "spreads":
+                            if point1 is None or point2 is None:
+                                continue
+                            # Require opposite signs and same absolute value
+                            if abs(point1) != abs(point2) or (point1 > 0) == (point2 > 0):
+                                continue
+
+                        if market_type == "totals":
+                            if point1 is None or point2 is None:
+                                continue
+                            # Require exact match (Over X vs Under X)
+                            if point1 != point2:
+                                continue
+
                         inv_sum = (1 / o1) + (1 / o2)
                         profit_margin = (1 - inv_sum) * 100
 
                         if profit_margin >= 2:
                             arbs.append({
                                 "teams": teams,
-                                "market": market1["key"],
+                                "market": market_type,
                                 "bookmakers": (book1["title"], book2["title"]),
                                 "odds": (o1, o2),
                                 "profit_margin": profit_margin,
