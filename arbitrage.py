@@ -40,7 +40,7 @@ def detect_arbitrage(game):
                             if abs(point1) != abs(point2) or (point1 > 0) == (point2 > 0):
                                 continue
 
-                        # Skip mismatched totals
+                        # Skip misaligned totals
                         if market_type == "totals":
                             if point1 is None or point2 is None:
                                 continue
@@ -51,15 +51,14 @@ def detect_arbitrage(game):
                         profit_margin = (1 - inv_sum) * 100
 
                         if profit_margin >= 2:
+                            # Deduplication keys
                             if market_type == "spreads":
-                                # Dedup by team, line, book (on side 1)
-                                key = (market_type, outcome1.get("name", ""), point1, book1["title"])
+                                key = ("spreads", outcome1.get("name", ""), point1)
                             elif market_type == "totals":
-                                # Dedup by label (Over/Under), line, book
-                                key = (market_type, outcome1.get("name", ""), point1, book1["title"])
+                                key = ("totals", outcome1.get("name", ""), point1)
                             elif market_type == "h2h":
                                 underdog_team = outcome1["name"] if o1 > o2 else outcome2["name"]
-                                key = (market_type, underdog_team)
+                                key = ("h2h", underdog_team)
                             else:
                                 key = (market_type, book1["title"])
 
