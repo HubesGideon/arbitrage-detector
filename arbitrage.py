@@ -71,7 +71,11 @@ def detect_arbitrage(game):
                                     "odds": (o1, o2),
                                     "profit_margin": profit_margin,
                                     "outcome1": outcome1,
-                                    "outcome2": outcome2
+                                    "outcome2": outcome2,
+                                    "start_time": game.get("commence_time"),
+                                    "in_play": game.get("in_progress", False),
+                                    "book1_last_update": book1.get("last_update", "N/A"),
+                                    "book2_last_update": book2.get("last_update", "N/A")
                                 }
                     except:
                         continue
