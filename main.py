@@ -4,7 +4,7 @@ from arbitrage import detect_arbitrage
 from notifier import notify_discord, format_message
 from datetime import datetime, timezone
 
-STALE_ODDS_THRESHOLD = 30  # seconds
+STALE_ODDS_THRESHOLD = 60  # seconds
 
 def is_stale(timestamp_str):
     try:
