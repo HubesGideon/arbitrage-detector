@@ -6,7 +6,6 @@ def detect_arbitrage(game):
     away_team = game.get("away_team", "Away")
     teams = (home_team, away_team)
 
-    # To track the best arb for each unique side-line-book combo
     best_by_side = defaultdict(dict)
 
     for book1 in game.get("bookmakers", []):
@@ -31,14 +30,14 @@ def detect_arbitrage(game):
                         point1 = outcome1.get("point")
                         point2 = outcome2.get("point")
 
-                        # Skip spreads that are the same on both sides (mirror)
+                        # Skip mirror spreads
                         if market_type == "spreads":
                             if point1 is None or point2 is None:
                                 continue
                             if abs(point1) != abs(point2) or (point1 > 0) == (point2 > 0):
                                 continue
 
-                        # Skip totals that are not matching
+                        # Skip totals with mismatched lines
                         if market_type == "totals":
                             if point1 is None or point2 is None:
                                 continue
@@ -49,13 +48,15 @@ def detect_arbitrage(game):
                         profit_margin = (1 - inv_sum) * 100
 
                         if profit_margin >= 2:
-                            # Define unique "side" key to suppress duplicates
-                            key = (
-                                market_type,
-                                outcome1.get("name", ""),
-                                point1,
-                                book1["title"]
-                            )
+                            # Define deduplication key
+                            if market_type == "spreads":
+                                key = (market_type, outcome1.get("name", ""), point1, book1["title"])
+                            elif market_type == "totals":
+                                key = (market_type, outcome1.get("name", ""), point1, book1["title"])
+                            elif market_type == "h2h":
+                                key = (market_type, outcome1.get("name", ""), book1["title"])
+                            else:
+                                key = (market_type, book1["title"])
 
                             existing = best_by_side.get(key)
                             if not existing or profit_margin > existing["profit_margin"]:
@@ -71,6 +72,5 @@ def detect_arbitrage(game):
                     except:
                         continue
 
-    # Collect only best margin entries per side
     arbs.extend(best_by_side.values())
     return arbs
