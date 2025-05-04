@@ -3,10 +3,8 @@ import os
 
 API_KEY = os.getenv("ODDS_API_KEY")
 
-# Specify markets per sport
 SPORT_MARKETS = {
-    "baseball_mlb": ["h2h", "spreads", "totals"],
-    "soccer_epl": ["spreads", "totals"]  # ⚠️ h2h skipped due to 3-way
+    "baseball_mlb": ["h2h", "spreads", "totals"]
 }
 
 REGION = "us"
