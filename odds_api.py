@@ -1,15 +1,41 @@
 import requests
 
-# 🔐 Your API key from The Odds API
+# 🔐 Your API key
 odds_api_key = "133b4b56ea3d83d2daa6e6e4a7c86737"
 
-# 🎾 Current active tennis sport keys
+# 🎾 All supported tennis tournament keys
 INCLUDED_SPORTS = [
-    "tennis_atp",
-    "tennis_wta"
+    "tennis_atp_aus_open_singles",
+    "tennis_atp_canadian_open",
+    "tennis_atp_china_open",
+    "tennis_atp_cincinnati_open",
+    "tennis_atp_dubai",
+    "tennis_atp_french_open",
+    "tennis_atp_indian_wells",
+    "tennis_atp_madrid_open",
+    "tennis_atp_miami_open",
+    "tennis_atp_monte_carlo_masters",
+    "tennis_atp_paris_masters",
+    "tennis_atp_qatar_open",
+    "tennis_atp_shanghai_masters",
+    "tennis_atp_us_open",
+    "tennis_atp_wimbledon",
+    "tennis_wta_aus_open_singles",
+    "tennis_wta_canadian_open",
+    "tennis_wta_china_open",
+    "tennis_wta_cincinnati_open",
+    "tennis_wta_dubai",
+    "tennis_wta_french_open",
+    "tennis_wta_indian_wells",
+    "tennis_wta_madrid_open",
+    "tennis_wta_miami_open",
+    "tennis_wta_qatar_open",
+    "tennis_wta_us_open",
+    "tennis_wta_wimbledon",
+    "tennis_wta_wuhan_open"
 ]
 
-# ✅ Legal bookmakers in Kansas + MyBookie
+# ✅ Kansas-legal books + MyBookie
 BOOKMAKER_WHITELIST = [
     "fanduel",
     "draftkings",
@@ -31,7 +57,7 @@ def fetch_odds():
             "oddsFormat": "decimal",
             "dateFormat": "iso",
             "bookmakers": ",".join(BOOKMAKER_WHITELIST),
-            "inPlayOnly": "true"  # 🎯 Only live games
+            "inPlayOnly": "true"  # Live games only
         }
 
         response = requests.get(url, params=params)
