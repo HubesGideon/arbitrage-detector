@@ -1,34 +1,46 @@
-import requests
-import os
+# Tennis-only arbitrage odds fetcher for May 2025
 
-API_KEY = os.getenv("ODDS_API_KEY")
+odds_api_key = "133b4b56ea3d83d2daa6e6e4a7c86737"
 
-SPORT_MARKETS = {
-    "baseball_mlb": ["h2h", "spreads", "totals"]
-}
-
-REGION = "us"
-BOOKMAKERS = [
-    "betmgm", "williamhill_us", "draftkings",
-    "fanduel", "fanatics", "espnbet", "mybookieag"
+INCLUDED_SPORTS = [
+    "tennis_atp_italian_open",
+    "tennis_atp_geneva_open",
+    "tennis_atp_hamburg_open",
+    "tennis_atp_french_open",
+    "tennis_wta_italian_open",
+    "tennis_wta_strasbourg",
+    "tennis_wta_morocco_open",
+    "tennis_wta_french_open"
 ]
 
+BOOKMAKER_WHITELIST = [
+    "fanduel", "draftkings", "betmgm", "caesars", "espn", "fanatics", "mybookieag"
+]
+
+import requests
+
 def fetch_odds():
-    all_odds = []
-    for sport, markets in SPORT_MARKETS.items():
-        for market in markets:
-            url = f"https://api.the-odds-api.com/v4/sports/{sport}/odds"
-            params = {
-                "apiKey": API_KEY,
-                "regions": REGION,
-                "markets": market,
-                "oddsFormat": "decimal",
-                "bookmakers": ",".join(BOOKMAKERS)
-            }
-            try:
-                response = requests.get(url, params=params)
-                response.raise_for_status()
-                all_odds.extend(response.json())
-            except Exception as e:
-                print(f"[ERROR] Failed to fetch odds for {sport} ({market}): {e}")
-    return all_odds
+    results = []
+    for sport in INCLUDED_SPORTS:
+        url = f"https://api.the-odds-api.com/v4/sports/{sport}/odds"
+        params = {
+            "apiKey": odds_api_key,
+            "regions": "us",
+            "markets": "h2h,spreads,totals",
+            "oddsFormat": "decimal",
+            "dateFormat": "iso",
+            "bookmakers": ",".join(BOOKMAKER_WHITELIST),
+            "inPlayOnly": "true"  # ✅ Live odds only
+        }
+
+        response = requests.get(url, params=params)
+        if response.status_code != 200:
+            print(f"❌ Failed to fetch odds for {sport}: {response.status_code} - {response.text}")
+            continue
+
+        data = response.json()
+        for game in data:
+            game["sport_key"] = sport
+            results.append(game)
+
+    return results
