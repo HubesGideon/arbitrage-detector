@@ -1,9 +1,9 @@
 import requests
 
-# 🔐 Your API key
+# 🔐 Your Odds API Key
 odds_api_key = "133b4b56ea3d83d2daa6e6e4a7c86737"
 
-# 🎾 All supported tennis tournament keys
+# 🎾 All supported tennis tournaments
 INCLUDED_SPORTS = [
     "tennis_atp_aus_open_singles",
     "tennis_atp_canadian_open",
@@ -35,7 +35,7 @@ INCLUDED_SPORTS = [
     "tennis_wta_wuhan_open"
 ]
 
-# ✅ Legal Kansas sportsbooks + MyBookie
+# ✅ Legal Kansas books + MyBookie
 BOOKMAKER_WHITELIST = [
     "fanduel",
     "draftkings",
@@ -49,6 +49,7 @@ BOOKMAKER_WHITELIST = [
 def fetch_odds():
     results = []
     for sport in INCLUDED_SPORTS:
+        print(f"🔎 Fetching odds for: {sport}")
         url = f"https://api.the-odds-api.com/v4/sports/{sport}/odds"
         params = {
             "apiKey": odds_api_key,
@@ -57,17 +58,20 @@ def fetch_odds():
             "oddsFormat": "decimal",
             "dateFormat": "iso",
             "bookmakers": ",".join(BOOKMAKER_WHITELIST),
-            "inPlayOnly": "false"  # ✅ Fetch live + pregame
+            "inPlayOnly": "false"  # ✅ Testing live + pregame
         }
 
         response = requests.get(url, params=params)
         if response.status_code != 200:
-            print(f"❌ Failed to fetch odds for {sport}: {response.status_code} - {response.text}")
+            print(f"❌ Failed for {sport}: {response.status_code} - {response.text}")
             continue
 
         data = response.json()
+        print(f"📦 {sport} returned {len(data)} game(s)")
         for game in data:
             game["sport_key"] = sport
             results.append(game)
 
+    print(f"✅ Total games found: {len(results)}")
     return results
+
