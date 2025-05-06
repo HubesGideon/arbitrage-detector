@@ -35,7 +35,7 @@ INCLUDED_SPORTS = [
     "tennis_wta_wuhan_open"
 ]
 
-# ✅ Kansas-legal books + MyBookie
+# ✅ Legal Kansas sportsbooks + MyBookie
 BOOKMAKER_WHITELIST = [
     "fanduel",
     "draftkings",
@@ -57,7 +57,7 @@ def fetch_odds():
             "oddsFormat": "decimal",
             "dateFormat": "iso",
             "bookmakers": ",".join(BOOKMAKER_WHITELIST),
-            "inPlayOnly": "true"  # Live games only
+            "inPlayOnly": "false"  # ✅ Fetch live + pregame
         }
 
         response = requests.get(url, params=params)
