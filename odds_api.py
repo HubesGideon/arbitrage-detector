@@ -1,23 +1,24 @@
-# Tennis-only arbitrage odds fetcher for May 2025
+import requests
 
+# 🔐 Your API key from The Odds API
 odds_api_key = "133b4b56ea3d83d2daa6e6e4a7c86737"
 
+# 🎾 Current active tennis sport keys
 INCLUDED_SPORTS = [
-    "tennis_atp_italian_open",
-    "tennis_atp_geneva_open",
-    "tennis_atp_hamburg_open",
-    "tennis_atp_french_open",
-    "tennis_wta_italian_open",
-    "tennis_wta_strasbourg",
-    "tennis_wta_morocco_open",
-    "tennis_wta_french_open"
+    "tennis_atp",
+    "tennis_wta"
 ]
 
+# ✅ Legal bookmakers in Kansas + MyBookie
 BOOKMAKER_WHITELIST = [
-    "fanduel", "draftkings", "betmgm", "caesars", "espn", "fanatics", "mybookieag"
+    "fanduel",
+    "draftkings",
+    "betmgm",
+    "caesars",
+    "espn",
+    "fanatics",
+    "mybookieag"
 ]
-
-import requests
 
 def fetch_odds():
     results = []
@@ -30,7 +31,7 @@ def fetch_odds():
             "oddsFormat": "decimal",
             "dateFormat": "iso",
             "bookmakers": ",".join(BOOKMAKER_WHITELIST),
-            "inPlayOnly": "true"  # ✅ Live odds only
+            "inPlayOnly": "true"  # 🎯 Only live games
         }
 
         response = requests.get(url, params=params)
